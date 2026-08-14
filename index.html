@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentes basados en Utilidad · IABS 2026-2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F1A;
+    --bg-alt:#0F1524;
+    --surface:#141C30;
+    --surface-2:#1B2740;
+    --border: rgba(232,176,75,0.16);
+    --border-soft: rgba(237,239,245,0.08);
+    --text:#EDEFF5;
+    --text-muted:#8C93A8;
+    --text-dim:#5D6479;
+    --gold:#E8B04B;
+    --gold-dim: rgba(232,176,75,0.35);
+    --teal:#4FD1C5;
+    --green:#7ED9A0;
+    --red:#E1636B;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  *{margin:0; padding:0; box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important;}
+  }
+
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+
+  ::selection{ background:var(--gold); color:#0B0F1A; }
+
+  a{color:inherit;}
+
+  .wrap{
+    max-width:1100px;
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  /* subtle background texture: grid + glow */
+  .bg-fx{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:
+      radial-gradient(700px 500px at 85% -5%, rgba(232,176,75,0.08), transparent 60%),
+      radial-gradient(600px 500px at -5% 40%, rgba(79,209,197,0.07), transparent 60%),
+      linear-gradient(var(--bg), var(--bg));
+  }
+  .bg-fx::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      linear-gradient(rgba(237,239,245,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(237,239,245,0.025) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 100% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+
+  /* ---------- NAV ---------- */
+  .topnav{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:18px 32px;
+    backdrop-filter: blur(10px);
+    background:rgba(11,15,26,0.55);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .brand{
+    font-family:var(--font-mono);
+    font-size:13px; letter-spacing:0.08em;
+    color:var(--text-muted);
+    display:flex; align-items:center; gap:8px;
+  }
+  .brand b{ color:var(--gold); font-weight:600; }
+  .dot-nav{ display:flex; gap:22px; }
+  .dot-nav a{
+    font-family:var(--font-mono);
+    font-size:11.5px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--text-dim); text-decoration:none;
+    position:relative; padding-bottom:4px;
+    transition:color .25s ease;
+  }
+  .dot-nav a::after{
+    content:""; position:absolute; left:0; bottom:0; height:1px; width:0;
+    background:var(--gold); transition:width .25s ease;
+  }
+  .dot-nav a.active, .dot-nav a:hover{ color:var(--text); }
+  .dot-nav a.active::after{ width:100%; }
+  @media (max-width: 820px){ .dot-nav{ display:none; } }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    min-height:100svh;
+    display:flex; flex-direction:column; justify-content:center;
+    position:relative;
+    padding-top:90px; padding-bottom:60px;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:13px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--teal);
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:28px;
+  }
+  .eyebrow::before{
+    content:""; width:26px; height:1px; background:var(--teal);
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(2.6rem, 7vw, 5.4rem);
+    line-height:1.02;
+    letter-spacing:-0.01em;
+    max-width:15ch;
+  }
+  h1.title em{
+    font-style:italic; font-weight:500; color:var(--gold);
+  }
+  .hero-sub{
+    margin-top:26px;
+    max-width:52ch;
+    font-size:clamp(1.02rem, 1.6vw, 1.22rem);
+    color:var(--text-muted);
+    font-weight:300;
+  }
+  .hero-sub b{ color:var(--text); font-weight:500;}
+
+  .hero-meta{
+    margin-top:52px;
+    display:flex; flex-wrap:wrap; gap:14px;
+  }
+  .chip{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--text-muted);
+    border:1px solid var(--border-soft);
+    padding:9px 16px;
+    border-radius:100px;
+    display:flex; align-items:center; gap:8px;
+    background:rgba(255,255,255,0.02);
+  }
+  .chip .k{ color:var(--gold); }
+
+  .scroll-cue{
+    position:absolute; bottom:34px; left:32px;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:0.08em;
+    color:var(--text-dim); text-transform:uppercase;
+    display:flex; align-items:center; gap:10px;
+  }
+  .scroll-cue .ln{
+    width:1px; height:34px; background:linear-gradient(var(--gold), transparent);
+    animation: pulse-ln 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse-ln{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
+
+  /* ---------- SECTION shared ---------- */
+  section{ padding:130px 0 40px; position:relative; }
+  section:last-of-type{ padding-bottom:100px; }
+  .kicker{
+    font-family:var(--font-mono);
+    font-size:12.5px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:18px;
+    display:flex; align-items:center; gap:10px;
+  }
+  .kicker .n{ color:var(--text-dim); }
+  h2.h{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(1.9rem, 3.4vw, 2.7rem);
+    max-width:20ch;
+    margin-bottom:22px;
+    letter-spacing:-0.01em;
+  }
+  .lead{
+    font-size:1.08rem;
+    color:var(--text-muted);
+    max-width:66ch;
+    font-weight:300;
+    margin-bottom:48px;
+  }
+  .lead b{ color:var(--text); font-weight:500; }
+
+  /* ---------- Definition callout ---------- */
+  .callout{
+    border:1px solid var(--border);
+    background:linear-gradient(135deg, rgba(232,176,75,0.06), rgba(79,209,197,0.03));
+    border-radius:14px;
+    padding:34px 38px;
+    margin:0 0 56px;
+  }
+  .callout .formula{
+    font-family:var(--font-mono);
+    font-size:1rem;
+    color:var(--teal);
+    margin-top:16px;
+    display:block;
+  }
+  .callout p{ color:var(--text); font-size:1.05rem; font-weight:400; }
+
+  /* ---------- workflow timeline ---------- */
+  .flow{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+    gap:0;
+    border-top:1px solid var(--border-soft);
+    border-left:1px solid var(--border-soft);
+  }
+  .flow-step{
+    border-right:1px solid var(--border-soft);
+    border-bottom:1px solid var(--border-soft);
+    padding:22px 20px;
+    min-height:150px;
+    display:flex; flex-direction:column; justify-content:space-between;
+    transition:background .25s ease;
+  }
+  .flow-step:hover{ background:rgba(232,176,75,0.04); }
+  .flow-step .num{
+    font-family:var(--font-mono); font-size:12px; color:var(--gold);
+  }
+  .flow-step .lbl{
+    font-family:var(--font-body); font-weight:500; font-size:0.98rem; margin-top:auto;
+  }
+
+  /* ---------- agent/env grid ---------- */
+  .agent-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(210px,1fr));
+    gap:1px;
+    background:var(--border-soft);
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+    overflow:hidden;
+  }
+  .agent-card{
+    background:var(--surface);
+    padding:28px 24px;
+    min-height:190px;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .agent-card .ico{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--teal);
+  }
+  .agent-card h3{
+    font-family:var(--font-display); font-weight:600; font-size:1.2rem;
+  }
+  .agent-card p{ font-size:0.92rem; color:var(--text-muted); }
+  .agent-card.highlight{ background:var(--surface-2); }
+  .agent-card.highlight .ico{ color:var(--gold); }
+
+  .example-note{
+    margin-top:28px;
+    font-size:0.98rem;
+    color:var(--text-muted);
+    border-left:2px solid var(--gold);
+    padding:4px 0 4px 20px;
+  }
+  .example-note b{ color:var(--gold); font-weight:500; }
+
+  /* ---------- Ventajas / desventajas toggles ---------- */
+  .toggle-row{
+    display:inline-flex;
+    border:1px solid var(--border-soft);
+    border-radius:100px;
+    padding:4px;
+    margin-bottom:36px;
+    background:rgba(255,255,255,0.02);
+  }
+  .toggle-row button{
+    font-family:var(--font-mono);
+    font-size:12.5px; letter-spacing:.06em; text-transform:uppercase;
+    padding:9px 22px;
+    border-radius:100px;
+    border:none;
+    background:transparent;
+    color:var(--text-muted);
+    cursor:pointer;
+    transition:all .25s ease;
+  }
+  .toggle-row button.is-active.mode-ventajas{ background:var(--green); color:#0B0F1A; }
+  .toggle-row button.is-active.mode-desventajas{ background:var(--red); color:#0B0F1A; }
+
+  .cards-stack{ display:grid; grid-template-columns:repeat(auto-fit, minmax(250px,1fr)); gap:18px; }
+  .flip-card{
+    perspective:1200px;
+    height:220px;
+    cursor:pointer;
+  }
+  .flip-inner{
+    position:relative; width:100%; height:100%;
+    transform-style:preserve-3d;
+    transition:transform .6s cubic-bezier(.4,.2,.2,1);
+  }
+  .flip-card.is-flipped .flip-inner{ transform:rotateY(180deg); }
+  .flip-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:14px;
+    padding:26px;
+    display:flex; flex-direction:column; gap:12px;
+    border:1px solid var(--border-soft);
+  }
+  .flip-front{ background:var(--surface); justify-content:space-between; }
+  .flip-front .tag{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-dim); letter-spacing:.06em; text-transform:uppercase;
+  }
+  .flip-front h4{ font-family:var(--font-display); font-size:1.3rem; font-weight:600; }
+  .flip-front .hint{ font-size:0.82rem; color:var(--text-dim); font-family:var(--font-mono); }
+  .flip-back{
+    background:var(--surface-2);
+    transform:rotateY(180deg);
+    justify-content:center;
+    border-color:var(--gold-dim);
+  }
+  .flip-back p{ font-size:0.94rem; color:var(--text); font-weight:300; }
+  .flip-back .close-hint{ font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim); margin-top:auto; }
+
+  /* ---------- Consola de decisión (signature widget) ---------- */
+  .console{
+    border:1px solid var(--border);
+    border-radius:18px;
+    background:linear-gradient(180deg, var(--surface), var(--bg-alt));
+    padding:40px;
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.6);
+  }
+  .console-head{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:16px;
+    margin-bottom:34px;
+    border-bottom:1px solid var(--border-soft);
+    padding-bottom:24px;
+  }
+  .console-head h3{ font-family:var(--font-display); font-size:1.4rem; font-weight:600; }
+  .console-head p{ color:var(--text-muted); font-size:0.92rem; max-width:40ch; margin-top:6px; }
+  .console-formula{
+    font-family:var(--font-mono); font-size:0.85rem; color:var(--teal);
+    text-align:right;
+  }
+  .console-body{
+    display:grid; grid-template-columns: 1fr 1fr; gap:44px;
+  }
+  @media (max-width: 760px){ .console-body{ grid-template-columns:1fr; } }
+
+  .controls-title{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:20px;
+  }
+  .slider-group{ margin-bottom:22px; }
+  .slider-group label{
+    display:flex; justify-content:space-between;
+    font-size:0.9rem; margin-bottom:8px; color:var(--text);
+  }
+  .slider-group label span.val{ font-family:var(--font-mono); color:var(--gold); }
+  input[type=range]{
+    -webkit-appearance:none; width:100%; height:3px;
+    background:var(--border-soft); border-radius:4px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--gold); cursor:pointer; border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--gold-dim);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--gold); cursor:pointer; border:3px solid var(--bg);
+  }
+
+  .toggle-pills{ display:flex; gap:10px; margin-top:26px; flex-wrap:wrap; }
+  .pill-set{ display:flex; flex-direction:column; gap:8px; }
+  .pill-set .pill-label{ font-size:0.8rem; color:var(--text-dim); font-family:var(--font-mono); }
+  .pill-options{ display:flex; gap:8px; }
+  .pill-options button{
+    font-family:var(--font-body); font-size:0.84rem;
+    padding:7px 14px; border-radius:8px;
+    border:1px solid var(--border-soft);
+    background:transparent; color:var(--text-muted); cursor:pointer;
+    transition:all .2s ease;
+  }
+  .pill-options button.is-active{
+    background:var(--surface-2); border-color:var(--gold); color:var(--gold);
+  }
+
+  .results-title{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:20px;
+  }
+  .result-row{ margin-bottom:20px; }
+  .result-row .rlabel{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-bottom:8px;
+  }
+  .result-row .rlabel .name{ font-weight:500; }
+  .result-row .rlabel .score{ font-family:var(--font-mono); color:var(--text-muted); font-size:0.9rem; }
+  .bar-track{
+    height:10px; border-radius:6px; background:var(--bg-alt);
+    overflow:hidden; border:1px solid var(--border-soft);
+  }
+  .bar-fill{
+    height:100%; border-radius:6px;
+    background:linear-gradient(90deg, var(--teal), var(--gold));
+    width:0%;
+    transition:width .5s cubic-bezier(.4,.2,.2,1);
+  }
+  .result-row.winner .rlabel .name::after{
+    content:"↳ elegido por el agente";
+    font-family:var(--font-mono); font-size:0.72rem; color:var(--green);
+    margin-left:10px; font-weight:400;
+  }
+  .result-row.winner .bar-fill{ background:linear-gradient(90deg, var(--green), var(--gold)); }
+
+  /* ---------- table (percept sequence) ---------- */
+  .table-wrap{
+    overflow-x:auto;
+    border:1px solid var(--border-soft);
+    border-radius:14px;
+  }
+  table.percept{
+    width:100%; border-collapse:collapse; min-width:680px;
+    font-size:0.92rem;
+  }
+  table.percept thead th{
+    text-align:left;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--gold);
+    background:var(--surface-2);
+    padding:16px 20px;
+    border-bottom:1px solid var(--border);
+  }
+  table.percept tbody td{
+    padding:16px 20px;
+    border-bottom:1px solid var(--border-soft);
+    color:var(--text-muted);
+  }
+  table.percept tbody tr:last-child td{ border-bottom:none; }
+  table.percept tbody tr{ transition:background .2s ease; }
+  table.percept tbody tr:hover{ background:rgba(232,176,75,0.04); }
+  table.percept td.action{
+    font-family:var(--font-mono); font-weight:500;
+  }
+  td.action.bicicleta{ color:var(--teal); }
+  td.action.bus{ color:var(--gold); }
+  td.action.taxi{ color:var(--red); }
+  table.percept td:first-child{ color:var(--text); font-weight:500; }
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--border-soft);
+    padding:50px 0 40px;
+  }
+  .foot-grid{
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:30px;
+  }
+  .foot-col h5{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:14px;
+  }
+  .foot-col a{
+    display:block; font-size:0.9rem; color:var(--text-muted); text-decoration:none;
+    margin-bottom:8px; transition:color .2s ease;
+  }
+  .foot-col a:hover{ color:var(--gold); }
+  .foot-note{
+    margin-top:40px; padding-top:24px; border-top:1px solid var(--border-soft);
+    font-family:var(--font-mono); font-size:11.5px; color:var(--text-dim);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  .reveal{
+    opacity:0; transform:translateY(18px);
+    transition:opacity .7s ease, transform .7s ease;
+  }
+  .reveal.is-visible{ opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="bg-fx"></div>
+
+<nav class="topnav">
+  <div class="brand">IABS <b>2026-2</b> · Agentes de IA</div>
+  <div class="dot-nav">
+    <a href="#inicio">Inicio</a>
+    <a href="#que-es">Qué es</a>
+    <a href="#ejemplo">Ejemplo</a>
+    <a href="#pros-contras">Ventajas</a>
+    <a href="#consola">Consola</a>
+    <a href="#tabla">Percepciones</a>
+  </div>
+</nav>
+
+<header class="hero" id="inicio">
+  <div class="wrap">
+    <div class="eyebrow">Tipos de agentes de IA</div>
+    <h1 class="title">Agentes basados en <em>utilidad</em></h1>
+    <p class="hero-sub">No basta con <b>llegar</b>. Este agente compara cada camino posible y elige el que ofrece la <b>mayor satisfacción global</b> — más rápido, más seguro, más cómodo o más barato — según cuánto valore cada cosa en cada momento.</p>
+    <div class="hero-meta">
+      <div class="chip"><span class="k">Curso</span> IABS · 2026-2</div>
+      <div class="chip"><span class="k">Programa</span> Ingeniería en Inteligencia Artificial · 4° semestre</div>
+      <div class="chip"><span class="k">Autores</span> Joseph Cañón &amp; Sharon Fernández</div>
+    </div>
+  </div>
+  <div class="scroll-cue"><div class="ln"></div>Desplázate</div>
+</header>
+
+<section id="que-es">
+  <div class="wrap">
+    <div class="kicker"><span class="n">01</span> Introducción</div>
+    <h2 class="h">¿Qué es un agente basado en utilidad?</h2>
+    <p class="lead">Un agente basado en utilidad es un sistema inteligente que usa una <b>función de utilidad</b> para tomar decisiones racionales, maximizando el beneficio esperado de sus posibles acciones. En lugar de preguntarse solo "¿llegué a la meta?", se pregunta <b>"¿cuál de todas las formas de llegar es mejor?"</b>.</p>
+
+    <div class="callout reveal">
+      <p>La función de utilidad asigna un <b>valor numérico</b> a cada resultado posible, resumiendo criterios como tiempo, seguridad, costo y comodidad en un solo puntaje. Ese puntaje es, en esencia, el sistema de valores del agente.</p>
+      <span class="formula">U(estado) → acción = argmax<sub>a</sub> U( Resultado(estado, a) )</span>
+    </div>
+
+    <div class="kicker" style="margin-top:10px;"><span class="n">→</span> Cómo decide, paso a paso</div>
+    <div class="flow reveal">
+      <div class="flow-step"><span class="num">01</span><span class="lbl">Percepción<br><small style="color:var(--text-dim); font-weight:300;">capta el entorno con sus sensores</small></span></div>
+      <div class="flow-step"><span class="num">02</span><span class="lbl">Modelado interno<br><small style="color:var(--text-dim); font-weight:300;">actualiza su idea del mundo</small></span></div>
+      <div class="flow-step"><span class="num">03</span><span class="lbl">Genera acciones<br><small style="color:var(--text-dim); font-weight:300;">lista opciones posibles</small></span></div>
+      <div class="flow-step"><span class="num">04</span><span class="lbl">Predice resultados<br><small style="color:var(--text-dim); font-weight:300;">estima qué pasaría con cada una</small></span></div>
+      <div class="flow-step"><span class="num">05</span><span class="lbl">Evalúa utilidad<br><small style="color:var(--text-dim); font-weight:300;">puntúa cada resultado posible</small></span></div>
+      <div class="flow-step"><span class="num">06</span><span class="lbl">Elige la acción<br><small style="color:var(--text-dim); font-weight:300;">la de mayor utilidad total</small></span></div>
+    </div>
+  </div>
+</section>
+
+<section id="ejemplo">
+  <div class="wrap">
+    <div class="kicker"><span class="n">02</span> Ejemplo aplicado</div>
+    <h2 class="h">Un agente que decide cómo llegar a la universidad</h2>
+    <p class="lead">Para identificar al agente y su ambiente, usamos un caso concreto: <b>un sistema que decide el medio de transporte</b> para llegar a la universidad, sopesando el contexto del día.</p>
+
+    <div class="agent-grid reveal">
+      <div class="agent-card highlight">
+        <span class="ico">Agente</span>
+        <h3>El decisor</h3>
+        <p>Sistema inteligente que decide el medio de transporte a usar cada mañana.</p>
+      </div>
+      <div class="agent-card">
+        <span class="ico">Ambiente</span>
+        <h3>El contexto</h3>
+        <p>Ciudad, tráfico, clima, rutas disponibles y opciones de transporte.</p>
+      </div>
+      <div class="agent-card">
+        <span class="ico">Percepciones</span>
+        <h3>Lo que capta</h3>
+        <p>Tráfico, lluvia, distancia, tiempo disponible, entre otros.</p>
+      </div>
+      <div class="agent-card">
+        <span class="ico">Acciones</span>
+        <h3>Lo que puede hacer</h3>
+        <p>Caminar, ir en bicicleta, tomar el bus o pedir un taxi.</p>
+      </div>
+      <div class="agent-card">
+        <span class="ico">Utilidad</span>
+        <h3>Lo que valora</h3>
+        <p>Rapidez, costo, comodidad y seguridad de cada opción.</p>
+      </div>
+    </div>
+
+    <p class="example-note">Por ejemplo: si hay <b>mucho tráfico</b> y <b>está lloviendo</b>, el agente puede determinar que <b>el bus tiene mayor utilidad</b> que ir en bicicleta — no porque sea la única forma de llegar, sino porque es la que mejor equilibra seguridad y comodidad ese día.</p>
+  </div>
+</section>
+
+<section id="pros-contras">
+  <div class="wrap">
+    <div class="kicker"><span class="n">03</span> Balance</div>
+    <h2 class="h">Ventajas y desventajas</h2>
+    <p class="lead">Toca una tarjeta para ver el detalle. Alterna entre <b>ventajas</b> y <b>desventajas</b> con el interruptor.</p>
+
+    <div class="toggle-row">
+      <button class="mode-ventajas is-active" data-mode="ventajas">Ventajas</button>
+      <button class="mode-desventajas" data-mode="desventajas">Desventajas</button>
+    </div>
+
+    <div class="cards-stack" id="cardsStack"></div>
+  </div>
+</section>
+
+<section id="consola">
+  <div class="wrap">
+    <div class="kicker"><span class="n">04</span> Interactivo</div>
+    <h2 class="h">Consola de decisión: ponle tú los valores</h2>
+    <p class="lead">Ajusta cuánto le importa al agente cada criterio y cómo está el día. Observa cómo cambia la utilidad de <b>bicicleta</b>, <b>bus</b> y <b>taxi</b> — y cuál gana.</p>
+
+    <div class="console reveal">
+      <div class="console-head">
+        <div>
+          <h3>Simulador de la función de utilidad</h3>
+          <p>Mismo ejemplo del punto 3: el agente que decide cómo llegar a la universidad.</p>
+        </div>
+        <div class="console-formula">U(opción) = Σ peso<sub>i</sub> × atributo<sub>i</sub></div>
+      </div>
+      <div class="console-body">
+        <div>
+          <div class="controls-title">Qué le importa al agente</div>
+          <div class="slider-group">
+            <label>Rapidez <span class="val" id="v-rapidez">50</span></label>
+            <input type="range" min="0" max="100" value="50" id="s-rapidez">
+          </div>
+          <div class="slider-group">
+            <label>Costo (bajo = mejor) <span class="val" id="v-costo">50</span></label>
+            <input type="range" min="0" max="100" value="50" id="s-costo">
+          </div>
+          <div class="slider-group">
+            <label>Comodidad <span class="val" id="v-comodidad">50</span></label>
+            <input type="range" min="0" max="100" value="50" id="s-comodidad">
+          </div>
+          <div class="slider-group">
+            <label>Seguridad <span class="val" id="v-seguridad">50</span></label>
+            <input type="range" min="0" max="100" value="50" id="s-seguridad">
+          </div>
+
+          <div class="toggle-pills">
+            <div class="pill-set">
+              <span class="pill-label">TRÁFICO</span>
+              <div class="pill-options" data-group="trafico">
+                <button data-value="bajo" class="is-active">Bajo</button>
+                <button data-value="alto">Alto</button>
+              </div>
+            </div>
+            <div class="pill-set">
+              <span class="pill-label">CLIMA</span>
+              <div class="pill-options" data-group="clima">
+                <button data-value="soleado" class="is-active">Soleado</button>
+                <button data-value="lluvia">Lluvia</button>
+              </div>
+            </div>
+            <div class="pill-set">
+              <span class="pill-label">TIEMPO DISPONIBLE</span>
+              <div class="pill-options" data-group="tiempo">
+                <button data-value="normal" class="is-active">Normal</button>
+                <button data-value="poco">Poco</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="results-title">Utilidad calculada</div>
+          <div id="results"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tabla">
+  <div class="wrap">
+    <div class="kicker"><span class="n">05</span> Registro del agente</div>
+    <h2 class="h">Tabla de percept sequence</h2>
+    <p class="lead">Una <b>percept sequence</b> es, básicamente, lo que el agente ha percibido hasta ese momento. Con base en cada estado percibido, el agente evalúa sus acciones posibles y elige la de mayor utilidad.</p>
+
+    <div class="table-wrap reveal">
+      <table class="percept">
+        <thead>
+          <tr>
+            <th>Percept sequence</th>
+            <th>Estado percibido</th>
+            <th>Acciones posibles</th>
+            <th>Acción elegida</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tráfico bajo + clima soleado</td>
+            <td>Buenas condiciones</td>
+            <td>Bicicleta, bus, taxi</td>
+            <td class="action bicicleta">Bicicleta</td>
+          </tr>
+          <tr>
+            <td>Tráfico alto + clima soleado</td>
+            <td>Mucho tráfico</td>
+            <td>Bicicleta, bus, taxi</td>
+            <td class="action bicicleta">Bicicleta</td>
+          </tr>
+          <tr>
+            <td>Tráfico alto + lluvia</td>
+            <td>Mal clima y tráfico</td>
+            <td>Bicicleta, bus, taxi</td>
+            <td class="action bus">Bus</td>
+          </tr>
+          <tr>
+            <td>Tráfico bajo + lluvia</td>
+            <td>Lluvia pero poco tráfico</td>
+            <td>Bicicleta, bus, taxi</td>
+            <td class="action bus">Bus</td>
+          </tr>
+          <tr>
+            <td>Tráfico alto + poco tiempo</td>
+            <td>Necesita llegar rápido</td>
+            <td>Bicicleta, bus, taxi</td>
+            <td class="action taxi">Taxi</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="example-note">Prueba estas mismas combinaciones en la <a href="#consola" style="color:var(--gold); text-decoration:none;">consola de decisión</a> y compara si la utilidad calculada coincide con la acción elegida aquí.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-col">
+        <h5>Proyecto</h5>
+        <span style="display:block; color:var(--text-muted); font-size:0.9rem;">Agentes basados en Utilidad</span>
+        <span style="display:block; color:var(--text-dim); font-size:0.82rem; margin-top:4px;">IABS · 2026-2 · Ingeniería en IA</span>
+      </div>
+      <div class="foot-col">
+        <h5>Autores</h5>
+        <span style="display:block; color:var(--text-muted); font-size:0.9rem;">Joseph Cañón</span>
+        <span style="display:block; color:var(--text-muted); font-size:0.9rem;">Sharon Fernández</span>
+      </div>
+      <div class="foot-col">
+        <h5>Fuentes</h5>
+        <a href="https://www.ibm.com/mx-es/think/topics/utility-based-agent" target="_blank" rel="noopener">IBM · ¿Qué es un agente basado en utilidades?</a>
+        <a href="https://zeromathai.com/es/utility-based-agents-es/" target="_blank" rel="noopener">Zero Math AI · Agentes basados en utilidad</a>
+      </div>
+    </div>
+    <div class="foot-note">
+      <span>Presentación académica interactiva</span>
+      <span>IABS 2026-2</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // ---- scroll spy ----
+  const navLinks = document.querySelectorAll('.dot-nav a');
+  const sections = [...navLinks].map(l => document.querySelector(l.getAttribute('href')));
+  const spy = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const id = '#' + e.target.id;
+        navLinks.forEach(l=> l.classList.toggle('active', l.getAttribute('href')===id));
+      }
+    });
+  }, { rootMargin: '-45% 0px -45% 0px' });
+  sections.forEach(s=> s && spy.observe(s));
+
+  // ---- reveal on scroll ----
+  const revealEls = document.querySelectorAll('.reveal');
+  const rObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){ e.target.classList.add('is-visible'); rObserver.unobserve(e.target); }
+    });
+  }, { threshold: 0.15 });
+  revealEls.forEach(el=> rObserver.observe(el));
+
+  // ---- ventajas / desventajas data ----
+  const data = {
+    ventajas: [
+      { tag:'Adaptabilidad', title:'Se ajusta al cambio', text:'Usa funciones de utilidad flexibles en vez de reglas fijas, por lo que se adapta a condiciones nuevas donde agentes más simples fallarían.' },
+      { tag:'Flexibilidad', title:'Maneja varias prioridades', text:'Puede sopesar objetivos que compiten entre sí (rapidez vs. costo vs. seguridad) y aun así llegar a una buena decisión.' },
+      { tag:'Confiabilidad', title:'Decisiones racionales', text:'Incluso ante resultados inciertos, tiende a elegir las opciones que traen el mayor beneficio a largo plazo.' }
+    ],
+    desventajas: [
+      { tag:'Rigidez', title:'No aprende solo', text:'Sin un componente de aprendizaje, no puede actualizar su función de utilidad de forma autónoma a partir de sus acciones pasadas.' },
+      { tag:'Costo computacional', title:'Exige mucho cálculo', text:'Evaluar la función de utilidad de forma continua requiere bastante cómputo; en escenarios urgentes puede ser demasiado lento.' },
+      { tag:'Complejidad y ética', title:'Difícil de diseñar bien', text:'Una buena función de utilidad es difícil de construir, y alguien debe decidir qué valores prioriza el agente — lo cual plantea dilemas éticos.' }
+    ]
+  };
+
+  const stack = document.getElementById('cardsStack');
+  const toggleBtns = document.querySelectorAll('.toggle-row button');
+
+  function renderCards(mode){
+    stack.innerHTML = '';
+    data[mode].forEach((item, i)=>{
+      const card = document.createElement('div');
+      card.className = 'flip-card';
+      card.innerHTML = `
+        <div class="flip-inner">
+          <div class="flip-face flip-front">
+            <span class="tag">${mode === 'ventajas' ? 'Ventaja' : 'Desventaja'} · 0${i+1}</span>
+            <h4>${item.tag}</h4>
+            <span class="hint">Toca para ver el detalle →</span>
+          </div>
+          <div class="flip-face flip-back">
+            <p><b style="color:var(--gold); display:block; margin-bottom:6px; font-family: var(--font-display); font-size:1.05rem;">${item.title}</b>${item.text}</p>
+            <span class="close-hint">Toca de nuevo para cerrar</span>
+          </div>
+        </div>`;
+      card.addEventListener('click', ()=> card.classList.toggle('is-flipped'));
+      stack.appendChild(card);
+    });
+  }
+  renderCards('ventajas');
+
+  toggleBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      toggleBtns.forEach(b=> b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      renderCards(btn.dataset.mode);
+    });
+  });
+
+  // ---- consola de decisión ----
+  const sliders = ['rapidez','costo','comodidad','seguridad'];
+  const sliderEls = {}, valEls = {};
+  sliders.forEach(k=>{
+    sliderEls[k] = document.getElementById('s-'+k);
+    valEls[k] = document.getElementById('v-'+k);
+  });
+
+  const state = { trafico:'bajo', clima:'soleado', tiempo:'normal' };
+
+  document.querySelectorAll('.pill-options').forEach(group=>{
+    const key = group.dataset.group;
+    group.querySelectorAll('button').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        group.querySelectorAll('button').forEach(b=> b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        state[key] = btn.dataset.value;
+        compute();
+      });
+    });
+  });
+
+  // base attributes per option: rapidez, costo(inverso), comodidad, seguridad (0-10)
+  const base = {
+    bicicleta: { rapidez:7, costo:10, comodidad:6, seguridad:6 },
+    bus:       { rapidez:5, costo:8,  comodidad:6, seguridad:8 },
+    taxi:      { rapidez:9, costo:2,  comodidad:9, seguridad:8 }
+  };
+
+  function attrsFor(option){
+    const a = { ...base[option] };
+    if(state.clima === 'lluvia'){
+      if(option==='bicicleta'){ a.comodidad -= 5; a.seguridad -= 2; }
+      if(option==='bus'){ a.comodidad += 1; }
+      if(option==='taxi'){ a.comodidad += 0.5; }
+    }
+    if(state.trafico === 'alto'){
+      if(option==='taxi'){ a.rapidez -= 3; }
+      if(option==='bus'){ a.rapidez -= 2; }
+      if(option==='bicicleta'){ a.rapidez += 1; }
+    }
+    if(state.tiempo === 'poco'){
+      if(option==='taxi'){ a.rapidez += 2; }
+      if(option==='bus'){ a.rapidez -= 1; }
+      if(option==='bicicleta'){ a.rapidez -= 1; }
+    }
+    Object.keys(a).forEach(k=> a[k] = Math.max(0, Math.min(10, a[k])));
+    return a;
+  }
+
+  function compute(){
+    const w = {};
+    let total = 0;
+    sliders.forEach(k=>{ w[k] = Number(sliderEls[k].value); total += w[k]; });
+    sliders.forEach(k=> valEls[k].textContent = w[k]);
+    if(total === 0) total = 1;
+
+    const scores = {};
+    Object.keys(base).forEach(option=>{
+      const a = attrsFor(option);
+      const u = (w.rapidez*a.rapidez + w.costo*a.costo + w.comodidad*a.comodidad + w.seguridad*a.seguridad) / total;
+      scores[option] = u;
+    });
+
+    const maxScore = Math.max(...Object.values(scores));
+    const names = { bicicleta:'Bicicleta', bus:'Bus', taxi:'Taxi' };
+
+    const results = document.getElementById('results');
+    results.innerHTML = '';
+    Object.keys(scores).sort((a,b)=> scores[b]-scores[a]).forEach(option=>{
+      const pct = (scores[option] / 10) * 100;
+      const isWinner = scores[option] === maxScore;
+      const row = document.createElement('div');
+      row.className = 'result-row' + (isWinner ? ' winner' : '');
+      row.innerHTML = `
+        <div class="rlabel">
+          <span class="name">${names[option]}</span>
+          <span class="score">U = ${scores[option].toFixed(1)}</span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>`;
+      results.appendChild(row);
+    });
+  }
+
+  sliders.forEach(k=> sliderEls[k].addEventListener('input', compute));
+  compute();
+</script>
+
+</body>
+</html>
